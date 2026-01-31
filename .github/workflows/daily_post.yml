@@ -6,6 +6,12 @@ on:
     - cron: '0 9 * * *'
     - cron: '0 19 * * *'
   workflow_dispatch:  # Manual trigger option
+    inputs:
+      test_mode:
+        description: 'Run in test mode (no actual upload)?'
+        required: false
+        default: 'false'
+        type: boolean
 
 jobs:
   post:

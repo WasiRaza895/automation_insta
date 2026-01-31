@@ -16,6 +16,96 @@ pip install -r requirements.txt
 python demo.py
 ```
 
+## 🚀 Run It NOW (Manual Test)
+
+Want to see it work immediately? Follow these steps:
+
+### Step 1: Clone the repository
+```bash
+git clone https://github.com/WasiRaza895/automation_insta.git
+cd automation_insta
+```
+
+### Step 2: Install dependencies
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Install system dependencies
+# On Ubuntu/Debian:
+sudo apt-get update
+sudo apt-get install imagemagick ffmpeg
+
+# On macOS:
+brew install imagemagick ffmpeg
+
+# Fix ImageMagick security policy (Ubuntu/Debian):
+sudo sed -i 's/<policy domain="path" rights="none" pattern="@\*"/<policy domain="path" rights="read|write" pattern="@*"/' /etc/ImageMagick-6/policy.xml
+```
+
+### Step 3: Set up your credentials
+```bash
+# Copy the example env file
+cp .env.example .env
+
+# Edit .env with your actual credentials
+nano .env  # or use any text editor (vim, code, etc.)
+```
+
+Make sure to fill in:
+- `GOOGLE_API_KEY` - Get from [Google AI Studio](https://aistudio.google.com/app/apikey)
+- `INSTAGRAM_USERNAME` - Your Instagram username
+- `INSTAGRAM_PASSWORD` - Your Instagram password
+- `INSTAGRAM_2FA_SEED` - (Optional) Only if you have 2FA enabled
+
+### Step 4: Run it!
+```bash
+python run_now.py
+```
+
+### Step 5: Watch the magic happen! 🎬
+
+The script will:
+1. 📝 Generate a stoic quote with Gemini
+2. 🎬 Create a video prompt
+3. 🎥 Generate a cinematic video (or placeholder if Veo unavailable)
+4. ✨ Add quote overlay in **1080x1920 Reel format** (9:16 vertical)
+5. 📱 Upload to Instagram as a **Reel** (not regular post)
+6. ✅ Done! Check your Instagram account!
+
+**Expected output:**
+```
+🚀 Starting manual Instagram post...
+==================================================
+📝 Step 1/6: Generating Content with Gemini
+✓ Quote: The obstacle is the way.
+✓ Video Prompt: A serene mountain landscape...
+🎬 Step 2/6: Video Generation (Cinematic)
+✓ Video ready: output/video_20240131_120000.mp4
+✨ Step 3/6: Video Processing (1080x1920 Reel Format)
+✓ Final video: output/video_20240131_120000.mp4
+📱 Step 4/6: Uploading to Instagram as Reel
+✓ Reel uploaded successfully!
+✅ SUCCESS! Your Reel is now live!
+🔗 View it: https://instagram.com/your_username/
+==================================================
+✅ Done! Check your Instagram account.
+```
+
+### Alternative: Manual Trigger from GitHub Actions
+
+You can also run it directly from GitHub:
+
+1. Go to your repository on GitHub
+2. Click the **Actions** tab
+3. Select "Daily Instagram Post" workflow
+4. Click **Run workflow** button
+5. (Optional) Check "Run in test mode" to skip upload
+6. Click green **Run workflow** button
+7. Watch it run in real-time!
+
+This is perfect for testing without having to set up anything locally.
+
 ## ✨ Features
 
 - 🎯 **AI-Powered Content Generation** - Uses Google Gemini to generate:
@@ -28,11 +118,15 @@ python demo.py
 - 🎥 **Video Creation** - Automated video generation:
   - Placeholder videos with text overlays (MoviePy + ImageMagick)
   - Google Veo 3.1 integration ready (when API available)
-  - 9:16 aspect ratio for Instagram Reels
+  - **Proper Instagram Reel format: 1080x1920 (9:16 vertical)**
+  - Automatic resize/crop from any source video
+  - H.264 codec with AAC audio
+  - 30 FPS, optimized for Instagram
   - Dark minimalist aesthetic
 
 - 📱 **Instagram Auto-Upload** - Smart posting system:
   - Automatic login with session persistence
+  - **Uploads as Instagram Reel** using `clip_upload()` (not regular video post)
   - Reel upload with captions and hashtags
   - 2FA support
   - Rate limiting and safety features

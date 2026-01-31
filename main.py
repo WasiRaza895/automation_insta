@@ -97,7 +97,7 @@ class InstagramAutomation:
             
             # Step 1: Generate content
             logger.info("\n" + "=" * 50)
-            logger.info("STEP 1: Generating Content with Gemini")
+            logger.info("📝 Step 1/6: Generating Content with Gemini")
             logger.info("=" * 50)
             
             content = self.content_generator.generate_content(
@@ -110,20 +110,20 @@ class InstagramAutomation:
             
             # Step 2: Generate/Get video
             logger.info("\n" + "=" * 50)
-            logger.info("STEP 2: Video Generation")
+            logger.info("🎬 Step 2/6: Video Generation (Cinematic)")
             logger.info("=" * 50)
             
             video_path = None
             
             if self.config['api']['veo_enabled']:
-                logger.info("Attempting Veo video generation...")
+                logger.info("🎥 Attempting Veo video generation...")
                 video_path = self.video_generator.generate_video(
                     prompt=content['video_prompt'],
                     duration=self.config['video']['duration']
                 )
             
             if not video_path:
-                logger.info("Creating placeholder video...")
+                logger.info("Creating placeholder video (Veo not available)...")
                 video_path = self.video_processor.create_placeholder_video(
                     text=content['quote'],
                     duration=self.config['video']['duration'],
@@ -133,10 +133,8 @@ class InstagramAutomation:
             logger.info(f"✓ Video ready: {video_path}")
             
             # Step 3: Process video (add text overlay if needed)
-            # Note: If we used placeholder video, text is already on it
-            # If we used Veo, we'd need to add text overlay here
             logger.info("\n" + "=" * 50)
-            logger.info("STEP 3: Video Processing")
+            logger.info("✨ Step 3/6: Video Processing (1080x1920 Reel Format)")
             logger.info("=" * 50)
             
             if self.config['api']['veo_enabled'] and video_path:
@@ -152,7 +150,7 @@ class InstagramAutomation:
             
             # Step 4: Upload to Instagram
             logger.info("\n" + "=" * 50)
-            logger.info("STEP 4: Instagram Upload")
+            logger.info("📱 Step 4/6: Uploading to Instagram as Reel")
             logger.info("=" * 50)
             
             # Prepare caption
@@ -175,14 +173,24 @@ class InstagramAutomation:
             logger.info("✓ Reel uploaded successfully!")
             
             # Step 5: Post first comment (optional)
+            logger.info("\n" + "=" * 50)
+            logger.info("💬 Step 5/6: Adding First Comment (Optional)")
+            logger.info("=" * 50)
+            logger.info("Note: First comment feature requires media ID from upload")
             # Note: We'd need the media ID from upload to post comment
             # This is left as a TODO for now
             
-            # Cleanup
+            # Step 6: Cleanup
+            logger.info("\n" + "=" * 50)
+            logger.info("🧹 Step 6/6: Cleanup")
+            logger.info("=" * 50)
             self.instagram_uploader.logout()
+            logger.info("✓ Session cleanup complete")
             
             logger.info("\n" + "=" * 50)
-            logger.info("AUTOMATION COMPLETED SUCCESSFULLY")
+            logger.info("✅ SUCCESS! Your Reel is now live!")
+            username = self.instagram_uploader.username
+            logger.info(f"🔗 View it: https://instagram.com/{username}/")
             logger.info("=" * 50)
             
             return True
