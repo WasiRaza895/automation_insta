@@ -22,5 +22,5 @@ safety:
   max_posts_per_day: 2
   
 api:
-  gemini_model: "gemini-2.0-flash-exp"
+  gemini_model: "gemini-1.5-flash"  # Updated to use stable model (was: gemini-2.0-flash-exp)
   veo_enabled: false  # Set to true when Veo API is available

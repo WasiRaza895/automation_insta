@@ -292,6 +292,113 @@ automation_insta/
 
 ## 🛠️ Troubleshooting
 
+### Gemini API Issues
+
+**1. Model 404 Error:**
+```
+Error generating content: 404 NOT_FOUND. 'models/gemini-2.0-flash-exp is not found for API version v1beta'
+```
+**Solution:**
+- The model name in your config is outdated or incorrect
+- Update `config.yaml` to use an available model:
+  ```yaml
+  api:
+    gemini_model: "gemini-1.5-flash"  # or gemini-1.5-pro
+  ```
+- The system will now auto-detect available models and suggest alternatives
+- Common working models: `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-pro`
+
+**2. API Key Invalid:**
+```
+403 PERMISSION_DENIED or invalid API key
+```
+**Solution:**
+- Verify your API key is set correctly:
+  ```bash
+  echo $GOOGLE_API_KEY  # Should show your key
+  ```
+- Get a new API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+- For GitHub Actions: Add/update the `GOOGLE_API_KEY` secret in repository settings
+
+**3. API Quota Exceeded:**
+```
+429 RESOURCE_EXHAUSTED
+```
+**Solution:**
+- You've exceeded the free tier quota
+- Wait for quota to reset (usually daily)
+- Check quota at [Google AI Studio](https://aistudio.google.com/)
+- Consider upgrading to paid tier for higher limits
+
+### Instagram Login Issues
+
+**1. Missing Credentials Error:**
+```
+ERROR: Instagram username and password are required
+```
+**Solution:**
+- Ensure environment variables are set:
+  ```bash
+  export INSTAGRAM_USERNAME="your_username"
+  export INSTAGRAM_PASSWORD="your_password"
+  ```
+- For GitHub Actions:
+  - Go to Settings → Secrets and variables → Actions
+  - Add `INSTAGRAM_USERNAME` and `INSTAGRAM_PASSWORD` secrets
+  - Secret names are case-sensitive!
+- Verify secrets don't contain only whitespace
+
+**2. 2FA NoneType Error:**
+```
+ERROR: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+```
+**Solution:**
+- This occurs when 2FA is configured incorrectly
+- **If you DON'T have 2FA on Instagram:**
+  - Remove or leave `INSTAGRAM_2FA_SEED` empty
+  - The system will automatically skip 2FA
+- **If you DO have 2FA on Instagram:**
+  - Get your 2FA seed when setting up authenticator app
+  - Format: Base32 encoded string (e.g., `JBSWY3DPEHPK3PXP`)
+  - Add to environment: `export INSTAGRAM_2FA_SEED="YOUR_SEED"`
+  - For GitHub Actions: Add as secret `INSTAGRAM_2FA_SEED`
+- The system now validates 2FA seeds before use
+
+**3. Challenge Required:**
+```
+Instagram is asking for verification
+```
+**Solution:**
+- Login to Instagram manually from the same network/IP
+- Complete any verification challenges (email, SMS, etc.)
+- Wait 24 hours before retrying automation
+- Use a Business/Creator account (more automation-friendly)
+
+**4. Rate Limited:**
+```
+Instagram is rate limiting
+```
+**Solution:**
+- Wait 6-24 hours before trying again
+- Reduce posting frequency in `config.yaml`:
+  ```yaml
+  safety:
+    max_posts_per_day: 1  # Reduce from 2
+    min_delay_seconds: 60  # Increase delays
+    max_delay_seconds: 180
+  ```
+- Don't run the automation too frequently during testing
+
+**5. Account Checkpoint:**
+```
+Account checkpoint detected
+```
+**Solution:**
+- Your account needs verification
+- Open Instagram app or website
+- Follow the security checkpoint prompts
+- May need to verify identity with email/phone
+
 ### GitHub Actions Workflow Failures
 
 **Common Issues:**
@@ -337,6 +444,19 @@ automation_insta/
 3. Review "Print environment info" step to verify dependencies
 4. Download artifacts (logs and output files) if available
 5. Test locally first: `python run_now.py` to reproduce the issue
+
+### Environment Variable Debugging
+
+The system now logs which environment variables are detected (without exposing values):
+
+```
+Environment variable status:
+  INSTAGRAM_USERNAME: ✓ SET
+  INSTAGRAM_PASSWORD: ✓ SET
+  INSTAGRAM_2FA_SEED: ○ NOT SET (2FA disabled)
+```
+
+If you see `✗ NOT SET` for required variables, that's the issue.
 
 ### Login Issues
 

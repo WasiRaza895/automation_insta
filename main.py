@@ -85,7 +85,7 @@ class InstagramAutomation:
                 'max_delay_seconds': 120
             },
             'api': {
-                'gemini_model': 'gemini-2.0-flash-exp',
+                'gemini_model': 'gemini-1.5-flash',  # Updated to use stable model
                 'veo_enabled': False
             }
         }

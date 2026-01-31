@@ -34,14 +34,54 @@ class InstagramUploader:
         self.two_factor_seed = two_factor_seed or os.getenv("INSTAGRAM_2FA_SEED")
         self.config = config or {}
         
-        if not self.username or not self.password:
-            raise ValueError("Instagram username and password are required")
+        # Validate credentials with helpful error messages
+        self._validate_credentials()
         
         self.client = Client()
         self.session_manager = SessionManager()
         self.logged_in = False
         
         logger.info(f"InstagramUploader initialized for user: {self.username}")
+        
+        # Log environment variable status (without exposing values)
+        self._log_env_status()
+    
+    def _validate_credentials(self):
+        """Validate that required credentials are present."""
+        errors = []
+        
+        if not self.username:
+            errors.append("INSTAGRAM_USERNAME is not set")
+        elif not self.username.strip():
+            errors.append("INSTAGRAM_USERNAME is empty or whitespace only")
+        
+        if not self.password:
+            errors.append("INSTAGRAM_PASSWORD is not set")
+        elif not self.password.strip():
+            errors.append("INSTAGRAM_PASSWORD is empty or whitespace only")
+        
+        if errors:
+            error_msg = "Instagram credentials validation failed:\n"
+            for error in errors:
+                error_msg += f"  ❌ {error}\n"
+            error_msg += "\n💡 Solution:\n"
+            error_msg += "  1. Set environment variables: INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD\n"
+            error_msg += "  2. For GitHub Actions: Add these as repository secrets\n"
+            error_msg += "  3. For local testing: Export them or add to .env file\n"
+            logger.error(error_msg)
+            raise ValueError("Instagram username and password are required")
+    
+    def _log_env_status(self):
+        """Log which environment variables are set (without exposing values)."""
+        logger.info("Environment variable status:")
+        logger.info(f"  INSTAGRAM_USERNAME: {'✓ SET' if self.username else '✗ NOT SET'}")
+        logger.info(f"  INSTAGRAM_PASSWORD: {'✓ SET' if self.password else '✗ NOT SET'}")
+        
+        # Check 2FA seed status more carefully
+        if self.two_factor_seed and self.two_factor_seed.strip():
+            logger.info(f"  INSTAGRAM_2FA_SEED: ✓ SET (2FA enabled)")
+        else:
+            logger.info(f"  INSTAGRAM_2FA_SEED: ○ NOT SET (2FA disabled)")
     
     def login(self) -> bool:
         """
@@ -75,18 +115,40 @@ class InstagramUploader:
             # Set device settings to avoid detection
             self.client.delay_range = [1, 3]
             
-            # Login
-            if self.two_factor_seed and self.two_factor_seed.strip():
+            # Check if 2FA is configured and valid
+            has_2fa = self.two_factor_seed and self.two_factor_seed.strip()
+            
+            # Login with or without 2FA
+            if has_2fa:
                 logger.info("2FA is enabled, generating code...")
                 try:
                     totp = pyotp.TOTP(self.two_factor_seed)
                     two_factor_code = totp.now()
+                    
+                    # Validate the code is numeric and has proper length (typically 6 digits)
+                    # Note: pyotp returns codes as strings, which may have leading zeros
+                    if not two_factor_code or not two_factor_code.isdigit() or len(two_factor_code) != 6:
+                        raise ValueError(f"Generated 2FA code is invalid (length: {len(two_factor_code) if two_factor_code else 0})")
+                    
+                    logger.info(f"Generated 2FA code (length: {len(two_factor_code)})")
                     self.client.login(self.username, self.password, verification_code=two_factor_code)
+                    
                 except (TypeError, ValueError, AttributeError) as e:
                     # These errors indicate invalid/malformed 2FA seed
-                    logger.warning(f"2FA seed appears invalid: {e}")
-                    logger.info("Attempting login without 2FA code (seed may be incorrectly configured)...")
-                    self.client.login(self.username, self.password)
+                    logger.warning(f"2FA seed appears invalid or malformed: {e}")
+                    logger.warning(f"Error type: {type(e).__name__}")
+                    logger.info("Attempting login without 2FA code...")
+                    logger.info("💡 If you have 2FA enabled, check your INSTAGRAM_2FA_SEED format")
+                    logger.info("   Expected format: Base32 encoded string (e.g., JBSWY3DPEHPK3PXP)")
+                    
+                    # Try login without 2FA
+                    try:
+                        self.client.login(self.username, self.password)
+                    except Exception as login_error:
+                        logger.error(f"Login failed without 2FA: {login_error}")
+                        logger.error("If your account has 2FA enabled, you must provide a valid 2FA seed")
+                        raise
+                        
             else:
                 logger.info("2FA not configured, logging in without 2FA...")
                 self.client.login(self.username, self.password)
@@ -95,23 +157,72 @@ class InstagramUploader:
             session = self.client.get_settings()
             self.session_manager.save_session(self.username, session)
             
-            logger.info("Login successful, session saved")
+            logger.info("✓ Login successful, session saved")
             self.logged_in = True
             return True
             
         except ChallengeRequired as e:
-            logger.error(f"Challenge required: {e}")
-            logger.error("Instagram is asking for verification. Please verify your account manually.")
+            logger.error(f"❌ Challenge required: {e}")
+            logger.error("Instagram is asking for verification.")
+            logger.error("💡 Solution:")
+            logger.error("   1. Login to Instagram manually from the same network/location")
+            logger.error("   2. Complete any verification challenges")
+            logger.error("   3. Try again after 24 hours")
             return False
+            
         except PleaseWaitFewMinutes as e:
-            logger.error(f"Rate limited: {e}")
-            logger.error("Instagram is rate limiting. Please wait and try again later.")
+            logger.error(f"❌ Rate limited: {e}")
+            logger.error("Instagram is rate limiting your requests.")
+            logger.error("💡 Solution:")
+            logger.error("   1. Wait at least 6-24 hours before trying again")
+            logger.error("   2. Reduce posting frequency in config.yaml")
+            logger.error("   3. Increase delay ranges in config.yaml")
             return False
+            
         except LoginRequired as e:
-            logger.error(f"Login failed: {e}")
+            logger.error(f"❌ Login failed: {e}")
+            logger.error("💡 Solution:")
+            logger.error("   1. Verify your Instagram username and password are correct")
+            logger.error("   2. Check if your account is locked or restricted")
+            logger.error("   3. Try logging in manually to verify credentials")
             return False
+            
+        except ClientError as e:
+            error_msg = str(e)
+            logger.error(f"❌ Instagram API error: {error_msg}")
+            
+            # Check for specific error patterns
+            # Note: This is a heuristic approach that may need updates if Instagram changes their error messages
+            if "user_id" in error_msg.lower() or "nonetype" in error_msg.lower():
+                logger.error("This appears to be a credentials or API response error.")
+                logger.error("💡 Solution:")
+                logger.error("   1. Verify INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD are set correctly")
+                logger.error("   2. Check if Instagram changed their API (update instagrapi)")
+                logger.error("   3. Try: pip install --upgrade instagrapi")
+            elif "checkpoint" in error_msg.lower():
+                logger.error("Account checkpoint detected.")
+                logger.error("💡 Solution: Complete Instagram's security checkpoint in the app/browser")
+            
+            return False
+            
         except Exception as e:
-            logger.error(f"Unexpected error during login: {e}")
+            error_msg = str(e)
+            logger.error(f"❌ Unexpected error during login: {error_msg}")
+            logger.error(f"Error type: {type(e).__name__}")
+            
+            # Provide context based on error type
+            if "NoneType" in error_msg or "int()" in error_msg:
+                logger.error("This error often indicates missing or improperly formatted credentials.")
+                logger.error("💡 Solution:")
+                logger.error("   1. Ensure INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD are set")
+                logger.error("   2. If using GitHub Actions, verify secrets are added correctly")
+                logger.error("   3. Check that environment variables don't contain only whitespace")
+            
+            # Print full traceback for debugging
+            import traceback
+            logger.error("Full traceback:")
+            logger.error(traceback.format_exc())
+            
             return False
     
     def upload_reel(self, video_path: str, caption: str, 
