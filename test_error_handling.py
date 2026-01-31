@@ -114,11 +114,16 @@ def test_helper_script_exists():
         else:
             print("⚠ Helper script is not executable (may need chmod +x)")
         
-        # Check if it can be imported
+        # Check if it can be imported and executed
         try:
             import importlib.util
             spec = importlib.util.spec_from_file_location("list_gemini_models", script_path)
+            if spec is None or spec.loader is None:
+                print("✗ Helper script could not be loaded")
+                return False
             module = importlib.util.module_from_spec(spec)
+            # Execute the module to catch syntax errors
+            spec.loader.exec_module(module)
             print("✓ Helper script is valid Python code")
             return True
         except Exception as e:

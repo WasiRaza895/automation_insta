@@ -302,18 +302,18 @@ This will:
 ```
 ✅ Found 3 model(s) that support content generation:
 
-1. models/gemini-1.5-flash
+1. gemini-1.5-flash
    Display Name: Gemini 1.5 Flash
    Description: Fast and efficient model
 
-2. models/gemini-1.5-pro
+2. gemini-1.5-pro
    Display Name: Gemini 1.5 Pro
    Description: Most capable model
 
 📝 How to use these models:
 Update your config.yaml file:
    api:
-     gemini_model: "models/gemini-1.5-flash"  # Example
+     gemini_model: "gemini-1.5-flash"  # Example
 ```
 
 ## 🔒 Safety & Best Practices
@@ -340,7 +340,7 @@ Update your config.yaml file:
 
 **1. Model 404 Error (Model Not Found):**
 ```
-Error generating content: 404 NOT_FOUND. 'models/gemini-1.5-flash is not found for API version v1beta'
+Error generating content: 404 NOT_FOUND. 'gemini-1.5-flash is not found for API version v1beta'
 ```
 **Root Cause:**
 - The Gemini model specified in your config is not available for your API key
