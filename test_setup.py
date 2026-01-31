@@ -46,8 +46,7 @@ def test_content_generator():
         from src.content_generator import ContentGenerator
         
         # Test fallback content generation
-        generator = ContentGenerator.__new__(ContentGenerator)
-        content = generator._generate_fallback_content('stoic')
+        content = ContentGenerator._generate_fallback_content('stoic')
         
         print(f"✓ Quote: {content['quote']}")
         print(f"✓ Caption length: {len(content['caption'])} chars")

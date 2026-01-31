@@ -91,7 +91,8 @@ Make it authentic, engaging, and optimized for Instagram algorithm."""
             logger.error(f"Error generating content: {e}")
             return self._generate_fallback_content(theme)
     
-    def _generate_fallback_content(self, theme: str) -> Dict[str, str]:
+    @staticmethod
+    def _generate_fallback_content(theme: str) -> Dict[str, str]:
         """Generate fallback content if API fails."""
         logger.warning("Using fallback content generation")
         

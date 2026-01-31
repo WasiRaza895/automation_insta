@@ -21,8 +21,7 @@ def demo_content_generation():
     
     try:
         # This will use fallback content if API key not set
-        generator = ContentGenerator.__new__(ContentGenerator)
-        content = generator._generate_fallback_content('stoic')
+        content = ContentGenerator._generate_fallback_content('stoic')
         
         print(f"\n📝 Generated Content:")
         print(f"\nQuote: \"{content['quote']}\"")
