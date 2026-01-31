@@ -50,6 +50,7 @@ generated_videos/
 *.mov
 
 # Session files
+sessions/
 session.json
 *.session
 

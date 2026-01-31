@@ -76,12 +76,19 @@ class InstagramUploader:
             self.client.delay_range = [1, 3]
             
             # Login
-            if self.two_factor_seed:
+            if self.two_factor_seed and self.two_factor_seed.strip():
                 logger.info("2FA is enabled, generating code...")
-                totp = pyotp.TOTP(self.two_factor_seed)
-                two_factor_code = totp.now()
-                self.client.login(self.username, self.password, verification_code=two_factor_code)
+                try:
+                    totp = pyotp.TOTP(self.two_factor_seed)
+                    two_factor_code = totp.now()
+                    self.client.login(self.username, self.password, verification_code=two_factor_code)
+                except (TypeError, ValueError, AttributeError) as e:
+                    # These errors indicate invalid/malformed 2FA seed
+                    logger.warning(f"2FA seed appears invalid: {e}")
+                    logger.info("Attempting login without 2FA code (seed may be incorrectly configured)...")
+                    self.client.login(self.username, self.password)
             else:
+                logger.info("2FA not configured, logging in without 2FA...")
                 self.client.login(self.username, self.password)
             
             # Save session
