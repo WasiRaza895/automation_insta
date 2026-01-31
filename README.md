@@ -292,6 +292,52 @@ automation_insta/
 
 ## 🛠️ Troubleshooting
 
+### GitHub Actions Workflow Failures
+
+**Common Issues:**
+
+1. **2FA Authentication Error:**
+   ```
+   ERROR: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+   ```
+   **Solution:** 
+   - If you don't have 2FA enabled on Instagram, leave `INSTAGRAM_2FA_SEED` secret empty or remove it
+   - If you do have 2FA enabled, ensure the secret is set correctly with your base32-encoded 2FA seed
+   - The workflow will now automatically handle missing/empty 2FA seeds
+
+2. **Missing Secrets:**
+   ```
+   ERROR: Instagram username and password are required
+   ```
+   **Solution:**
+   - Go to repository Settings → Secrets and variables → Actions
+   - Add all required secrets: `GOOGLE_API_KEY` (or `GEMINI_API_KEY`), `INSTAGRAM_USERNAME`, `INSTAGRAM_PASSWORD`
+   - Verify secret names match exactly (case-sensitive)
+
+3. **ImageMagick Policy Error:**
+   ```
+   attempt to perform an operation not allowed by the security policy
+   ```
+   **Solution:** This is automatically fixed in the workflow. If running locally, see the "Video Processing Issues" section below.
+
+4. **Python Package Installation Failure:**
+   - Check the "Install Python dependencies" step in workflow logs
+   - Ensure `requirements.txt` is valid and all packages are available
+   - The workflow installs Python 3.10 - some packages may have compatibility issues
+
+5. **Video Upload Failure:**
+   - Instagram may rate limit or challenge your account
+   - Use a Business/Creator account (less restrictive)
+   - Reduce posting frequency in `config.yaml`
+   - Check if account requires manual verification
+
+**Debugging Steps:**
+1. Go to Actions tab and select the failed workflow run
+2. Check "Run Instagram automation" step for detailed error logs
+3. Review "Print environment info" step to verify dependencies
+4. Download artifacts (logs and output files) if available
+5. Test locally first: `python run_now.py` to reproduce the issue
+
 ### Login Issues
 
 **Challenge Required:**
