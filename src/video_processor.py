@@ -17,6 +17,13 @@ from src.utils import get_logger, ensure_dir, sanitize_filename
 
 logger = get_logger(__name__)
 
+# Instagram Reel specifications
+REEL_WIDTH = 1080
+REEL_HEIGHT = 1920
+ASPECT_RATIO = "9:16"  # Vertical/Portrait
+DURATION = 15  # seconds (optimal for Reels)
+FPS = 30
+
 class VideoProcessor:
     """Process videos by adding text overlays and effects."""
     
@@ -26,7 +33,7 @@ class VideoProcessor:
         self.font_size = self.config.get('font_size', 60)
         self.text_color = self.config.get('text_color', 'white')
         self.output_dir = ensure_dir('output')
-        logger.info("VideoProcessor initialized")
+        logger.info(f"VideoProcessor initialized (Reel format: {REEL_WIDTH}x{REEL_HEIGHT})")
     
     def create_text_clip(self, text: str, duration: float, video_size: Tuple[int, int]) -> TextClip:
         """
@@ -82,7 +89,7 @@ class VideoProcessor:
     
     def add_text_to_video(self, video_path: str, text: str, output_path: str = None) -> str:
         """
-        Add text overlay to a video.
+        Add text overlay to a video and ensure proper Reel format (1080x1920).
         
         Args:
             video_path: Path to input video
@@ -97,6 +104,33 @@ class VideoProcessor:
             
             # Load video
             video = VideoFileClip(video_path)
+            
+            # Resize/crop video to Instagram Reel dimensions (1080x1920)
+            logger.info(f"Original video size: {video.size}")
+            
+            if video.size != (REEL_WIDTH, REEL_HEIGHT):
+                logger.info(f"Resizing video to Reel format: {REEL_WIDTH}x{REEL_HEIGHT}")
+                
+                # Calculate aspect ratios
+                video_aspect = video.w / video.h
+                reel_aspect = REEL_WIDTH / REEL_HEIGHT
+                
+                if video_aspect > reel_aspect:
+                    # Video is wider - crop sides
+                    new_width = int(video.h * reel_aspect)
+                    x_center = video.w / 2
+                    x1 = int(x_center - new_width / 2)
+                    video = video.crop(x1=x1, width=new_width)
+                else:
+                    # Video is taller or same - crop top/bottom
+                    new_height = int(video.w / reel_aspect)
+                    y_center = video.h / 2
+                    y1 = int(y_center - new_height / 2)
+                    video = video.crop(y1=y1, height=new_height)
+                
+                # Resize to exact dimensions
+                video = video.resize((REEL_WIDTH, REEL_HEIGHT))
+                logger.info(f"Video resized to: {video.size}")
             
             # Create text clip
             txt_clip = self.create_text_clip(text, video.duration, video.size)
@@ -115,14 +149,15 @@ class VideoProcessor:
                 filename = sanitize_filename(text[:30]) + "_overlay.mp4"
                 output_path = os.path.join(self.output_dir, filename)
             
-            # Write video
+            # Write video with proper Reel settings
             logger.info(f"Writing processed video to: {output_path}")
             final_video.write_videofile(
                 output_path,
                 codec='libx264',
                 audio_codec='aac',
-                fps=video.fps,
-                preset='medium'
+                fps=FPS,
+                preset='medium',
+                bitrate='5000k'  # High quality for Instagram
             )
             
             # Close clips
@@ -138,7 +173,7 @@ class VideoProcessor:
     
     def create_placeholder_video(self, text: str, duration: int = 15, output_path: str = None) -> str:
         """
-        Create a simple placeholder video with text (for testing when Veo API is unavailable).
+        Create a simple placeholder video with text in proper Reel format (1080x1920).
         
         Args:
             text: Text to display
@@ -149,20 +184,17 @@ class VideoProcessor:
             Path to created video
         """
         try:
-            logger.info(f"Creating placeholder video with duration: {duration}s")
+            logger.info(f"Creating placeholder video with duration: {duration}s (Reel format: {REEL_WIDTH}x{REEL_HEIGHT})")
             
-            # Create a dark background video (9:16 aspect ratio for Instagram Reels)
-            width, height = 1080, 1920
-            
-            # Create background clip
+            # Create background clip in Reel format (9:16 aspect ratio for Instagram Reels)
             bg_clip = ColorClip(
-                size=(width, height),
+                size=(REEL_WIDTH, REEL_HEIGHT),
                 color=(20, 20, 20),
                 duration=duration
             )
             
             # Create text clip
-            txt_clip = self.create_text_clip(text, duration, (width, height))
+            txt_clip = self.create_text_clip(text, duration, (REEL_WIDTH, REEL_HEIGHT))
             
             # Composite
             video = CompositeVideoClip([bg_clip, txt_clip])
@@ -172,13 +204,15 @@ class VideoProcessor:
                 filename = sanitize_filename(text[:30]) + "_placeholder.mp4"
                 output_path = os.path.join(self.output_dir, filename)
             
-            # Write video
+            # Write video with proper Reel settings
             logger.info(f"Writing placeholder video to: {output_path}")
             video.write_videofile(
                 output_path,
                 codec='libx264',
-                fps=24,
-                preset='ultrafast'
+                audio_codec='aac',
+                fps=FPS,
+                preset='ultrafast',
+                bitrate='5000k'
             )
             
             # Close clips
