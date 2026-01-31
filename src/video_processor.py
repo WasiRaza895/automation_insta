@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 REEL_WIDTH = 1080
 REEL_HEIGHT = 1920
 ASPECT_RATIO = "9:16"  # Vertical/Portrait
-DURATION = 15  # seconds (optimal for Reels)
+DURATION = 15  # seconds (optimal for Reels) - Reference value, actual duration passed as parameter
 FPS = 30
 
 class VideoProcessor:
