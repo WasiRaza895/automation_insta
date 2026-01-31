@@ -125,9 +125,10 @@ class InstagramUploader:
                     totp = pyotp.TOTP(self.two_factor_seed)
                     two_factor_code = totp.now()
                     
-                    # Validate the code is numeric and has proper length
-                    if not two_factor_code or not two_factor_code.isdigit():
-                        raise ValueError("Generated 2FA code is invalid")
+                    # Validate the code is numeric and has proper length (typically 6 digits)
+                    # Note: pyotp returns codes as strings, which may have leading zeros
+                    if not two_factor_code or not two_factor_code.isdigit() or len(two_factor_code) != 6:
+                        raise ValueError(f"Generated 2FA code is invalid (length: {len(two_factor_code) if two_factor_code else 0})")
                     
                     logger.info(f"Generated 2FA code (length: {len(two_factor_code)})")
                     self.client.login(self.username, self.password, verification_code=two_factor_code)
@@ -191,6 +192,7 @@ class InstagramUploader:
             logger.error(f"❌ Instagram API error: {error_msg}")
             
             # Check for specific error patterns
+            # Note: This is a heuristic approach that may need updates if Instagram changes their error messages
             if "user_id" in error_msg.lower() or "nonetype" in error_msg.lower():
                 logger.error("This appears to be a credentials or API response error.")
                 logger.error("💡 Solution:")

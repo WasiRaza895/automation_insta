@@ -42,20 +42,17 @@ class ContentGenerator:
         """
         Validate the requested model and return a working model name.
         Falls back to available alternatives if the requested model is not found.
-        """
-        try:
-            # Try to use the requested model directly first
-            logger.info(f"Attempting to use requested model: {requested_model}")
-            return requested_model
-        except Exception:
-            pass
         
-        # If that fails, list available models and find a suitable alternative
-        logger.warning(f"Model '{requested_model}' may not be available, checking alternatives...")
+        Note: This method uses heuristics to select a fallback model since we can't
+        validate the model without making an API call. The first actual API call
+        (generate_content) will verify if the model is valid.
+        """
+        # List available models and find a suitable alternative if needed
+        logger.info(f"Requested model: {requested_model}")
         available_models = self._list_available_models()
         
         if not available_models:
-            logger.warning("Could not retrieve available models list, will attempt to use fallback model")
+            logger.warning("Could not retrieve available models list, will use requested model")
             # Common fallback models (in order of preference)
             fallback_models = [
                 "gemini-1.5-flash",
@@ -64,19 +61,23 @@ class ContentGenerator:
                 "gemini-1.0-pro"
             ]
             
-            for fallback in fallback_models:
-                logger.info(f"Trying fallback model: {fallback}")
-                return fallback
+            # Check if requested model is a known good one
+            if requested_model in fallback_models:
+                logger.info(f"Using requested model (known stable): {requested_model}")
+                return requested_model
             
-            # If all else fails, return the requested model and let it fail with a clear error
-            logger.error(f"No fallback models available. Will attempt to use: {requested_model}")
+            # Otherwise suggest fallback but use requested model
+            for fallback in fallback_models:
+                logger.warning(f"Cannot verify model availability. Consider using: {fallback}")
+                break
+            
             return requested_model
         
         logger.info(f"Available models: {', '.join(available_models)}")
         
         # Check if requested model is in the list
         for model_name in available_models:
-            if requested_model in model_name:
+            if requested_model in model_name or model_name in requested_model:
                 logger.info(f"✓ Found matching model: {model_name}")
                 return model_name
         
@@ -99,7 +100,7 @@ class ContentGenerator:
             logger.warning(f"⚠️  Please update config.yaml to use: {available_models[0]}")
             return available_models[0]
         
-        # If we got here, something is very wrong
+        # If we got here, something is very wrong - use requested model and let it fail with clear error
         logger.error("No suitable model found. Will attempt to use requested model anyway.")
         return requested_model
     
