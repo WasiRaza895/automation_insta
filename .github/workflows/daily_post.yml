@@ -1,27 +1,54 @@
-name: Moizz Auto Poster
+name: Daily Instagram Post
+
 on:
   schedule:
-    - cron: '0 13 * * *' # This means 1:00 PM UTC every day
-  workflow_dispatch: # This lets you press a button to run it manually
+    # Post twice daily at optimal times (9 AM and 7 PM UTC)
+    - cron: '0 9 * * *'
+    - cron: '0 19 * * *'
+  workflow_dispatch:  # Manual trigger option
 
 jobs:
-  build:
+  post:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
+      
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
-      - name: Install Tools
+      
+      - name: Install system dependencies
         run: |
-          sudo apt install imagemagick
-          pip install -U google-genai moviepy requests
-
-      - name: Run AI Script
+          sudo apt-get update
+          sudo apt-get install -y imagemagick ffmpeg
+          
+      - name: Fix ImageMagick policy
+        run: |
+          sudo sed -i 's/<policy domain="path" rights="none" pattern="@\*"/<policy domain="path" rights="read|write" pattern="@*"/' /etc/ImageMagick-6/policy.xml
+      
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run Instagram automation
         env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python auto_moizz.py
+          INSTAGRAM_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
+          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
+          INSTAGRAM_2FA_SEED: ${{ secrets.INSTAGRAM_2FA_SEED }}
+        run: python main.py
+      
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ github.run_number }}
+          path: |
+            *.log
+            output/
+          retention-days: 7

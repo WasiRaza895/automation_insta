@@ -1,0 +1,26 @@
+instagram:
+  username: "${INSTAGRAM_USERNAME}"
+  post_frequency: 2  # posts per day
+  optimal_times: ["09:00", "19:00"]
+  
+content:
+  theme: "stoic"  # stoic, motivational, minimalist
+  quote_style: "short"  # short, medium, long
+  hashtag_count: 25
+  
+video:
+  duration: 15
+  aspect_ratio: "9:16"
+  style: "dark_minimalist"
+  font_size: 60
+  text_color: "white"
+  
+safety:
+  min_delay_seconds: 30
+  max_delay_seconds: 120
+  enable_proxy: false
+  max_posts_per_day: 2
+  
+api:
+  gemini_model: "gemini-2.0-flash-exp"
+  veo_enabled: false  # Set to true when Veo API is available
