@@ -82,9 +82,10 @@ class InstagramUploader:
                     totp = pyotp.TOTP(self.two_factor_seed)
                     two_factor_code = totp.now()
                     self.client.login(self.username, self.password, verification_code=two_factor_code)
-                except Exception as e:
-                    logger.error(f"Error generating 2FA code: {e}")
-                    logger.info("Attempting login without 2FA...")
+                except (TypeError, ValueError, AttributeError) as e:
+                    # These errors indicate invalid/malformed 2FA seed
+                    logger.warning(f"2FA seed appears invalid: {e}")
+                    logger.info("Attempting login without 2FA code (seed may be incorrectly configured)...")
                     self.client.login(self.username, self.password)
             else:
                 logger.info("2FA not configured, logging in without 2FA...")
