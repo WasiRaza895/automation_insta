@@ -224,13 +224,20 @@ python test_setup.py
 ```
 This checks all dependencies and configuration.
 
-**Option B: Run Demo (No API Keys Needed)**
+**Option B: List Available Gemini Models**
+```bash
+# List models available for your API key
+python list_gemini_models.py
+```
+This helps you find which Gemini models are available for your API key. Use this if you get 404 errors.
+
+**Option C: Run Demo (No API Keys Needed)**
 ```bash
 python demo.py
 ```
 This demonstrates all components with fallback content.
 
-**Option C: Test Full Automation Locally**
+**Option D: Test Full Automation Locally**
 ```bash
 # Set environment variables
 export GOOGLE_API_KEY="your-key-here"
@@ -271,7 +278,42 @@ automation_insta/
 ├── config.yaml                 # Configuration file
 ├── requirements.txt            # Python dependencies
 ├── main.py                     # Main orchestrator
+├── list_gemini_models.py       # Helper: List available Gemini models
+├── run_now.py                  # Manual run script
 └── README.md                   # This file
+```
+
+## 🔧 Helper Scripts
+
+### List Available Gemini Models
+If you encounter a 404 error with Gemini, use this helper to see which models are available:
+
+```bash
+python list_gemini_models.py
+```
+
+This will:
+- Connect to the Gemini API using your API key
+- List all models that support content generation
+- Show which models you can use in `config.yaml`
+- Provide recommendations for stable models
+
+**Example output:**
+```
+✅ Found 3 model(s) that support content generation:
+
+1. models/gemini-1.5-flash
+   Display Name: Gemini 1.5 Flash
+   Description: Fast and efficient model
+
+2. models/gemini-1.5-pro
+   Display Name: Gemini 1.5 Pro
+   Description: Most capable model
+
+📝 How to use these models:
+Update your config.yaml file:
+   api:
+     gemini_model: "models/gemini-1.5-flash"  # Example
 ```
 
 ## 🔒 Safety & Best Practices
