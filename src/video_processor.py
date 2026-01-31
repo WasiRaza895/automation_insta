@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 from typing import Tuple
-from moviepy.editor import (
+from moviepy import (
     VideoFileClip, TextClip, CompositeVideoClip,
     ColorClip
 )
@@ -42,26 +42,28 @@ class VideoProcessor:
             possible_fonts = [
                 '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
                 'assets/fonts/Montserrat-Bold.ttf',
-                None  # Default system font
+                'DejaVu-Sans-Bold'  # System font name
             ]
             
             for font in possible_fonts:
-                if font is None or (font and Path(font).exists()):
+                if font and Path(font).exists() if '/' in font else True:
                     font_path = font
                     break
             
             txt_clip = TextClip(
-                text,
-                fontsize=self.font_size,
-                color=self.text_color,
+                text=text,
                 font=font_path,
+                font_size=self.font_size,
+                color=self.text_color,
                 size=(video_size[0] - 100, None),  # Leave margin
                 method='caption',
-                align='center'
+                text_align='center',
+                horizontal_align='center',
+                vertical_align='center'
             )
             
-            txt_clip = txt_clip.set_duration(duration)
-            txt_clip = txt_clip.set_position('center')
+            txt_clip = txt_clip.with_duration(duration)
+            txt_clip = txt_clip.with_position('center')
             
             logger.info(f"Created text clip: '{text[:30]}...'")
             return txt_clip
@@ -95,7 +97,7 @@ class VideoProcessor:
             bg_clip = ColorClip(
                 size=(video.size[0], txt_clip.h + 40),
                 color=(0, 0, 0)
-            ).set_opacity(0.3).set_duration(video.duration).set_position(('center', 'center'))
+            ).with_opacity(0.3).with_duration(video.duration).with_position(('center', 'center'))
             
             # Composite video
             final_video = CompositeVideoClip([video, bg_clip, txt_clip])

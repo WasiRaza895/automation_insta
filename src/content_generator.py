@@ -3,7 +3,8 @@
 import os
 import json
 from typing import Dict
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from src.utils import get_logger
 
 logger = get_logger(__name__)
@@ -17,8 +18,8 @@ class ContentGenerator:
         if not self.api_key:
             raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY environment variable is required")
         
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(model)
+        self.client = genai.Client(api_key=self.api_key)
+        self.model_name = model
         logger.info(f"ContentGenerator initialized with model: {model}")
     
     def generate_content(self, theme: str = "stoic", quote_style: str = "short") -> Dict[str, str]:
@@ -52,7 +53,10 @@ Make it authentic, engaging, and optimized for Instagram algorithm."""
 
         try:
             logger.info(f"Generating content with theme: {theme}, style: {quote_style}")
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
             
             # Extract JSON from response
             response_text = response.text.strip()
