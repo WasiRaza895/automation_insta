@@ -3,10 +3,14 @@
 import os
 from pathlib import Path
 from typing import Tuple
-from moviepy import (
-    VideoFileClip, TextClip, CompositeVideoClip,
-    ColorClip
-)
+
+# Configure MoviePy to find ImageMagick
+from moviepy.config import change_settings
+change_settings({"IMAGEMAGICK_BINARY": "/usr/bin/convert"})
+
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.video.VideoClip import TextClip, ColorClip
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from src.utils import get_logger, ensure_dir, sanitize_filename
@@ -51,19 +55,17 @@ class VideoProcessor:
                     break
             
             txt_clip = TextClip(
-                text=text,
+                txt=text,
                 font=font_path,
-                font_size=self.font_size,
+                fontsize=self.font_size,
                 color=self.text_color,
                 size=(video_size[0] - 100, None),  # Leave margin
                 method='caption',
-                text_align='center',
-                horizontal_align='center',
-                vertical_align='center'
+                align='center'
             )
             
-            txt_clip = txt_clip.with_duration(duration)
-            txt_clip = txt_clip.with_position('center')
+            txt_clip = txt_clip.set_duration(duration)
+            txt_clip = txt_clip.set_position('center')
             
             logger.info(f"Created text clip: '{text[:30]}...'")
             return txt_clip
@@ -97,7 +99,7 @@ class VideoProcessor:
             bg_clip = ColorClip(
                 size=(video.size[0], txt_clip.h + 40),
                 color=(0, 0, 0)
-            ).with_opacity(0.3).with_duration(video.duration).with_position(('center', 'center'))
+            ).set_opacity(0.3).set_duration(video.duration).set_position(('center', 'center'))
             
             # Composite video
             final_video = CompositeVideoClip([video, bg_clip, txt_clip])

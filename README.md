@@ -53,9 +53,14 @@ cd automation_insta
 sudo apt-get install imagemagick ffmpeg  # Ubuntu/Debian
 # brew install imagemagick ffmpeg        # macOS
 
+# Fix ImageMagick security policy (Ubuntu/Debian)
+sudo sed -i 's/<policy domain="path" rights="none" pattern="@\*"/<policy domain="path" rights="read|write" pattern="@*"/' /etc/ImageMagick-6/policy.xml
+
 # Install Python packages
 pip install -r requirements.txt
 ```
+
+**Note:** The ImageMagick policy fix is required to allow text rendering on videos. On GitHub Actions, this is handled automatically in the workflow.
 
 ### 3. Configure GitHub Secrets
 
