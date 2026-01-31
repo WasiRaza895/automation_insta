@@ -58,6 +58,8 @@ Make sure to fill in:
 - `INSTAGRAM_PASSWORD` - Your Instagram password
 - `INSTAGRAM_2FA_SEED` - (Optional) Only if you have 2FA enabled
 
+**💡 Pro Tip:** Run `python list_gemini_models.py` to see which Gemini models are available for your API key, then update `config.yaml` accordingly.
+
 ### Step 4: Run it!
 ```bash
 python run_now.py
@@ -294,19 +296,46 @@ automation_insta/
 
 ### Gemini API Issues
 
-**1. Model 404 Error:**
+**1. Model 404 Error (Model Not Found):**
 ```
-Error generating content: 404 NOT_FOUND. 'models/gemini-2.0-flash-exp is not found for API version v1beta'
+Error generating content: 404 NOT_FOUND. 'models/gemini-1.5-flash is not found for API version v1beta'
 ```
+**Root Cause:**
+- The Gemini model specified in your config is not available for your API key
+- This can happen when:
+  - Model name is outdated or incorrect
+  - Model is not enabled for your API key/region
+  - Model requires different permissions or subscription tier
+  - Model is in beta and not available to all users
+
 **Solution:**
-- The model name in your config is outdated or incorrect
-- Update `config.yaml` to use an available model:
-  ```yaml
-  api:
-    gemini_model: "gemini-1.5-flash"  # or gemini-1.5-pro
-  ```
-- The system will now auto-detect available models and suggest alternatives
-- Common working models: `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-pro`
+
+**Step 1: List your available models**
+```bash
+# Run the helper script to see what models are available for your API key
+python list_gemini_models.py
+```
+
+This will show you all models you can use with your API key.
+
+**Step 2: Update config.yaml**
+```yaml
+api:
+  gemini_model: "gemini-1.5-flash"  # Use a model from the list above
+```
+
+**Step 3: Common working models to try:**
+- `gemini-1.5-flash` (recommended - fast and efficient)
+- `gemini-1.5-pro` (more capable, may be slower)
+- `gemini-pro` (stable, older version)
+- `gemini-1.0-pro` (legacy, but widely available)
+
+**For GitHub Actions:**
+1. Update `config.yaml` with an available model
+2. Commit and push the changes
+3. The next workflow run will use the updated model
+
+**Note:** The system will now automatically detect available models at runtime and suggest alternatives if your configured model is not found. It will fall back to static content generation if no suitable model is available.
 
 **2. API Key Invalid:**
 ```
@@ -398,6 +427,93 @@ Account checkpoint detected
 - Open Instagram app or website
 - Follow the security checkpoint prompts
 - May need to verify identity with email/phone
+
+**6. IP Address Blacklisted / Action Blocked:**
+```
+Instagram API error: ... change your IP address, because it is added to the blacklist
+```
+or
+```
+Action blocked - suspicious activity detected
+```
+
+**Root Cause:**
+- Instagram has flagged your IP address as suspicious or bot-like
+- This commonly happens when:
+  - Running automation from GitHub Actions (cloud/datacenter IPs are often flagged)
+  - Using VPS or cloud hosting services
+  - Multiple failed login attempts from the same IP
+  - Rapid, bot-like activity patterns
+  - First-time automation from a new IP address
+
+**Solutions:**
+
+**Option 1: Run from a Trusted Local IP (Recommended)**
+```bash
+# 1. Clone the repository locally
+git clone https://github.com/WasiRaza895/automation_insta.git
+cd automation_insta
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Set up environment variables
+export INSTAGRAM_USERNAME='your_username'
+export INSTAGRAM_PASSWORD='your_password'
+export GOOGLE_API_KEY='your_api_key'
+
+# 4. Run from your home/mobile network (NOT VPN or proxy)
+python run_now.py
+```
+
+**Option 2: Recover Your Instagram Account**
+1. Open Instagram app or website from a trusted device
+2. Complete any security challenges or verifications
+3. You may need to:
+   - Verify via email or SMS
+   - Reset your password
+   - Confirm your identity
+4. **Wait 24-48 hours** before attempting automation again
+5. Do NOT keep retrying from the blocked IP
+
+**Option 3: Prevent Future Blocks**
+1. **Use Instagram Business/Creator account** (more tolerant of automation)
+2. **Reduce posting frequency** in `config.yaml`:
+   ```yaml
+   safety:
+     max_posts_per_day: 1  # Start with just 1 post per day
+     min_delay_seconds: 120  # Increase delays significantly
+     max_delay_seconds: 300
+   ```
+3. **Build account trust first:**
+   - Post manually from Instagram mobile app for 3-7 days
+   - Like, comment, and engage normally
+   - Verify account with phone number and email
+   - Avoid sudden automation from a new IP
+4. **For GitHub Actions users:**
+   - Consider running automation less frequently (once per day max)
+   - Or switch to local execution from a residential IP
+   - GitHub runner IPs are often pre-flagged by Instagram
+
+**⚠️ CRITICAL WARNINGS:**
+- **DO NOT** keep retrying from the same blocked IP (makes it worse)
+- **DO NOT** use multiple accounts from the same blocked IP
+- **DO NOT** ignore Instagram's security warnings
+- **DO NOT** use aggressive retry logic
+- Repeated violations may lead to **permanent account ban**
+
+**Understanding IP Blocks:**
+Instagram uses sophisticated bot detection that flags:
+- Datacenter/cloud IP addresses (AWS, Azure, Google Cloud, GitHub)
+- IPs with history of abuse or automation
+- Sudden activity from unfamiliar locations
+- Patterns that don't match normal human behavior
+
+The best approach is to establish trust gradually:
+1. Start with manual posts from your normal device/network
+2. Gradually introduce automation from a residential IP
+3. Keep frequency low and delays high
+4. Monitor for any Instagram warnings
 
 ### GitHub Actions Workflow Failures
 
