@@ -21,24 +21,26 @@ def list_available_models():
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     
     if not api_key:
-        print("\n❌ ERROR: No API key found!")
-        print("\n💡 Solution:")
-        print("   Set environment variable:")
-        print("   export GOOGLE_API_KEY='your-api-key-here'")
-        print("\n   Or for local testing, create a .env file with:")
-        print("   GOOGLE_API_KEY=your-api-key-here")
-        print("\n   Get your API key from: https://aistudio.google.com/app/apikey")
+        logger.error("No API key found!")
+        logger.info("Solution:")
+        logger.info("  Set environment variable:")
+        logger.info("  export GOOGLE_API_KEY='your-api-key-here'")
+        logger.info("")
+        logger.info("  Or for local testing, create a .env file with:")
+        logger.info("  GOOGLE_API_KEY=your-api-key-here")
+        logger.info("")
+        logger.info("  Get your API key from: https://aistudio.google.com/app/apikey")
         return False
     
     try:
-        print("\n" + "=" * 60)
-        print("🔍 Listing Available Gemini Models")
-        print("=" * 60)
-        print(f"\nConnecting to Gemini API...")
+        logger.info("=" * 60)
+        logger.info("🔍 Listing Available Gemini Models")
+        logger.info("=" * 60)
+        logger.info("Connecting to Gemini API...")
         
         client = genai.Client(api_key=api_key)
         
-        print("Fetching models list...\n")
+        logger.info("Fetching models list...")
         models = client.models.list()
         
         # Filter for models that support generateContent
@@ -48,86 +50,92 @@ def list_available_models():
                 generative_models.append(model)
         
         if not generative_models:
-            print("❌ No models found that support content generation!")
-            print("\n💡 This might indicate:")
-            print("   1. API key is invalid or expired")
-            print("   2. API access is restricted")
-            print("   3. You need to enable the Gemini API in your project")
+            logger.error("No models found that support content generation!")
+            logger.info("This might indicate:")
+            logger.info("  1. API key is invalid or expired")
+            logger.info("  2. API access is restricted")
+            logger.info("  3. You need to enable the Gemini API in your project")
             return False
         
-        print(f"✅ Found {len(generative_models)} model(s) that support content generation:\n")
-        print("-" * 60)
+        logger.info(f"✅ Found {len(generative_models)} model(s) that support content generation:")
+        logger.info("-" * 60)
         
         # Sort by name for better readability
         generative_models.sort(key=lambda m: m.name)
         
         for i, model in enumerate(generative_models, 1):
-            print(f"\n{i}. {model.name}")
-            print(f"   Display Name: {model.display_name}")
-            print(f"   Description: {model.description}")
+            # Strip "models/" prefix for cleaner display
+            model_name = model.name.replace("models/", "")
+            logger.info(f"\n{i}. {model_name}")
+            logger.info(f"   Display Name: {model.display_name}")
+            logger.info(f"   Description: {model.description}")
             
             # Show supported methods
             methods = ", ".join(model.supported_generation_methods)
-            print(f"   Supported Methods: {methods}")
+            logger.info(f"   Supported Methods: {methods}")
         
-        print("\n" + "-" * 60)
-        print("\n📝 How to use these models:")
-        print("\n1. Choose a model from the list above")
-        print("2. Update your config.yaml file:")
-        print("\n   api:")
-        print(f"     gemini_model: \"{generative_models[0].name}\"  # Example")
-        print("\n3. Recommended models:")
+        logger.info("\n" + "-" * 60)
+        logger.info("\n📝 How to use these models:")
+        logger.info("\n1. Choose a model from the list above")
+        logger.info("2. Update your config.yaml file:")
+        logger.info("\n   api:")
+        # Strip "models/" prefix to match config format
+        example_model = generative_models[0].name.replace("models/", "")
+        logger.info(f"     gemini_model: \"{example_model}\"  # Example")
+        logger.info("\n3. Recommended models:")
         
         # Suggest best models
         recommended = []
         for model in generative_models:
+            model_name = model.name.replace("models/", "")
             if 'flash' in model.name.lower():
-                recommended.append(f"   - {model.name} (Fast and efficient)")
+                recommended.append(f"   - {model_name} (Fast and efficient)")
             elif 'pro' in model.name.lower():
-                recommended.append(f"   - {model.name} (More capable)")
+                recommended.append(f"   - {model_name} (More capable)")
         
         if recommended:
             for rec in recommended[:3]:  # Show top 3 recommendations
-                print(rec)
+                logger.info(rec)
         else:
-            print(f"   - {generative_models[0].name} (Available)")
+            model_name = generative_models[0].name.replace("models/", "")
+            logger.info(f"   - {model_name} (Available)")
         
-        print("\n" + "=" * 60)
-        print("✅ Done! Update your config.yaml with one of the models above.")
-        print("=" * 60)
+        logger.info("\n" + "=" * 60)
+        logger.info("✅ Done! Update your config.yaml with one of the models above.")
+        logger.info("=" * 60)
         
         return True
         
     except Exception as e:
         error_msg = str(e)
-        print(f"\n❌ ERROR: Failed to list models")
-        print(f"\nDetails: {error_msg}\n")
+        logger.error("Failed to list models")
+        logger.error(f"Details: {error_msg}")
         
         if "401" in error_msg or "UNAUTHENTICATED" in error_msg:
-            print("💡 Your API key appears to be invalid.")
-            print("   Get a new key from: https://aistudio.google.com/app/apikey")
+            logger.info("💡 Your API key appears to be invalid.")
+            logger.info("   Get a new key from: https://aistudio.google.com/app/apikey")
         elif "403" in error_msg or "PERMISSION_DENIED" in error_msg:
-            print("💡 Your API key doesn't have permission to access Gemini API.")
-            print("   Check your API settings at: https://aistudio.google.com/")
+            logger.info("💡 Your API key doesn't have permission to access Gemini API.")
+            logger.info("   Check your API settings at: https://aistudio.google.com/")
         elif "connection" in error_msg.lower() or "network" in error_msg.lower():
-            print("💡 Network connection issue. Check your internet connection.")
+            logger.info("💡 Network connection issue. Check your internet connection.")
         else:
-            print("💡 Unexpected error. Check your API key and try again.")
+            logger.info("💡 Unexpected error. Check your API key and try again.")
         
         return False
 
 
 def main():
     """Main entry point."""
-    print("\n🤖 Gemini Model List Helper")
-    print("This script helps you find available models for your API key.\n")
+    logger.info("\n🤖 Gemini Model List Helper")
+    logger.info("This script helps you find available models for your API key.\n")
     
     success = list_available_models()
     
     if success:
         sys.exit(0)
     else:
-        print("\n⚠️  Failed to list models. Check the errors above.")
+        logger.warning("Failed to list models. Check the errors above.")
         sys.exit(1)
 
 
