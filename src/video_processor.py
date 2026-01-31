@@ -50,7 +50,13 @@ class VideoProcessor:
             ]
             
             for font in possible_fonts:
-                if font and Path(font).exists() if '/' in font else True:
+                # Check if it's a file path and if it exists
+                if '/' in font:
+                    if Path(font).exists():
+                        font_path = font
+                        break
+                else:
+                    # It's a font name, try to use it
                     font_path = font
                     break
             

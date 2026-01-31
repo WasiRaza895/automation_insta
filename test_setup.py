@@ -146,6 +146,7 @@ def test_environment():
             print(f"✓ {name:30s} - SET")
         else:
             print(f"⚠ {name:30s} - NOT SET (required for full automation)")
+            # Only fail on missing API key since Instagram creds are only needed for upload
             if 'GOOGLE' in name or 'GEMINI' in name:
                 all_set = False
     

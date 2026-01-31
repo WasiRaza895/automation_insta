@@ -184,16 +184,21 @@ class InstagramUploader:
             return False
     
     def logout(self):
-        """Logout from Instagram."""
+        """
+        Cleanup after Instagram operations.
+        
+        Note: We intentionally do NOT call client.logout() to preserve the session
+        for future runs. This avoids repeated logins which can trigger Instagram's
+        rate limits and account restrictions. The session is saved and reused.
+        """
         try:
             if self.logged_in:
-                logger.info("Logging out...")
-                # Don't actually logout to preserve session
-                # self.client.logout()
+                logger.info("Cleaning up...")
+                # Session is already saved by session_manager, just mark as logged out
                 self.logged_in = False
                 logger.info("Session preserved for next run")
         except Exception as e:
-            logger.warning(f"Error during logout: {e}")
+            logger.warning(f"Error during cleanup: {e}")
 
 def main():
     """Test the Instagram uploader."""
