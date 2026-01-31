@@ -2,6 +2,20 @@
 
 A **fully automated Instagram posting system** that generates quotes, creates videos, and uploads to Instagram with zero manual intervention using AI.
 
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![GitHub Actions](https://img.shields.io/badge/automation-GitHub%20Actions-orange.svg)](/.github/workflows/daily_post.yml)
+
+## 🎬 Quick Demo
+
+```bash
+# Clone and run demo
+git clone https://github.com/WasiRaza895/automation_insta.git
+cd automation_insta
+pip install -r requirements.txt
+python demo.py
+```
+
 ## ✨ Features
 
 - 🎯 **AI-Powered Content Generation** - Uses Google Gemini to generate:
@@ -106,8 +120,21 @@ safety:
   max_posts_per_day: 2
 ```
 
-### 5. Test Locally (Optional)
+### 5. Test Your Setup
 
+**Option A: Run Validation Tests**
+```bash
+python test_setup.py
+```
+This checks all dependencies and configuration.
+
+**Option B: Run Demo (No API Keys Needed)**
+```bash
+python demo.py
+```
+This demonstrates all components with fallback content.
+
+**Option C: Test Full Automation Locally**
 ```bash
 # Set environment variables
 export GOOGLE_API_KEY="your-key-here"
@@ -117,6 +144,8 @@ export INSTAGRAM_PASSWORD="your-password"
 # Run automation
 python main.py
 ```
+
+**Note**: For local testing without Instagram upload, comment out the upload section in `main.py`.
 
 ### 6. Enable GitHub Actions
 
